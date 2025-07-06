@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "123456789000",
-    "project_id": "notes-app-placeholder",
-    "storage_bucket": "notes-app-placeholder.appspot.com"
+    "project_number": "378479693108",
+    "project_id": "flutter-assignment-2",
+    "storage_bucket": "flutter-assignment-2.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:123456789000:android:abcdef1234567890",
+        "mobilesdk_app_id": "1:378479693108:android:17cca49924af734a2ce961",
         "android_client_info": {
           "package_name": "com.example.individual_assignment_two"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+          "current_key": "AIzaSyCCJLZjgNQND5rri6JJSPnxaGbdLGdjnyw"
         }
       ],
       "services": {

@@ -162,9 +162,14 @@ class AuthWrapper extends StatelessWidget {
 
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
+        print('AuthWrapper: Current state is ${state.runtimeType}');
+        
         if (state is AuthAuthenticated) {
           return const NotesScreen();
-        } else if (state is AuthUnauthenticated) {
+        } else if (state is AuthUnauthenticated || state is AuthInitial) {
+          return const AuthScreen();
+        } else if (state is AuthError) {
+          // Show auth screen even when there's an error, so user can retry
           return const AuthScreen();
         } else {
           // Show loading screen while checking auth status

@@ -55,7 +55,19 @@ class _AuthScreenState extends State<AuthScreen> {
                 content: Text(state.message),
                 backgroundColor: AppColors.error,
                 behavior: SnackBarBehavior.floating,
-                duration: const Duration(seconds: 5),
+                duration: const Duration(seconds: 8),
+                action: SnackBarAction(
+                  label: 'Try Again',
+                  textColor: AppColors.white,
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    // Clear the form and allow retry
+                    _emailController.clear();
+                    _passwordController.clear();
+                    // Clear the error state and reset to initial state
+                    context.read<AuthBloc>().add(ClearAuthErrorEvent());
+                  },
+                ),
               ),
             );
           }
@@ -101,6 +113,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
+                      enabled: !BlocProvider.of<AuthBloc>(context).state.isLoading,
                       decoration: InputDecoration(
                         labelText: 'Email',
                         prefixIcon: Icon(Icons.email, color: AppColors.purple),
@@ -135,6 +148,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
+                      enabled: !BlocProvider.of<AuthBloc>(context).state.isLoading,
                       decoration: InputDecoration(
                         labelText: 'Password',
                         prefixIcon: Icon(Icons.lock, color: AppColors.purple),
@@ -180,7 +194,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     BlocBuilder<AuthBloc, AuthState>(
                       builder: (context, state) {
                         return ElevatedButton(
-                          onPressed: state is AuthLoading ? null : _submitForm,
+                          onPressed: state.isLoading ? null : _submitForm,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.purple,
                             foregroundColor: AppColors.white,
@@ -190,14 +204,27 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                             elevation: 2,
                           ),
-                          child: state is AuthLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
-                                  ),
+                          child: state.isLoading
+                              ? Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      _isLogin ? 'Signing In...' : 'Creating Account...',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
                                 )
                               : Text(
                                   _isLogin ? 'Sign In' : 'Sign Up',
@@ -212,21 +239,25 @@ class _AuthScreenState extends State<AuthScreen> {
                     const SizedBox(height: 16),
 
                     // Toggle between Login and Sign Up
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _isLogin = !_isLogin;
-                        });
+                    BlocBuilder<AuthBloc, AuthState>(
+                      builder: (context, state) {
+                        return TextButton(
+                          onPressed: state.isLoading ? null : () {
+                            setState(() {
+                              _isLogin = !_isLogin;
+                            });
+                          },
+                          child: Text(
+                            _isLogin
+                                ? 'Don\'t have an account? Sign Up'
+                                : 'Already have an account? Sign In',
+                            style: GoogleFonts.poppins(
+                              color: state.isLoading ? AppColors.secondaryText : AppColors.purple,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        );
                       },
-                      child: Text(
-                        _isLogin
-                            ? 'Don\'t have an account? Sign Up'
-                            : 'Already have an account? Sign In',
-                        style: GoogleFonts.poppins(
-                          color: AppColors.purple,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
                     ),
                   ],
                 ),

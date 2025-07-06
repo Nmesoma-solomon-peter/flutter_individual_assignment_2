@@ -28,12 +28,17 @@ class NoteRepository {
       final querySnapshot = await _firebaseFirestore
           .collection('notes')
           .where('userId', isEqualTo: userId)
-          .orderBy('updatedAt', descending: true)
           .get();
 
-      return querySnapshot.docs
+      // Sort the results in memory instead of in the query
+      final notes = querySnapshot.docs
           .map((doc) => Note.fromMap(doc.data(), doc.id))
           .toList();
+      
+      // Sort by updatedAt in descending order (newest first)
+      notes.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      
+      return notes;
     } catch (e) {
       throw Exception('Failed to fetch notes: $e');
     }
