@@ -10,6 +10,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   StreamSubscription<User?>? _authStateSubscription;
   Timer? _timeoutTimer;
   static const Duration _timeout = Duration(seconds: 30);
+  String? _currentOperation; // Track current operation type
 
   AuthBloc({required AuthRepository authRepository})
       : _authRepository = authRepository,
@@ -32,13 +33,35 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           // Only emit authenticated if we're not already in that state
           if (state is! AuthAuthenticated || (state as AuthAuthenticated).user.uid != user.uid) {
             print('AuthBloc: Emitting AuthAuthenticated for user: ${user.email}');
-            emit(AuthAuthenticated(user));
+            // Check if this was a sign up operation
+            if (state is AuthLoading) {
+              if (_currentOperation == 'signup') {
+                emit(AuthSuccess('Account created successfully! Welcome, ${user.email}!'));
+              } else if (_currentOperation == 'signin') {
+                emit(AuthSuccess('Welcome back, ${user.email}!'));
+              } else {
+                emit(AuthAuthenticated(user));
+              }
+              _currentOperation = null; // Reset operation flag
+            } else {
+              emit(AuthAuthenticated(user));
+            }
           }
         } else {
           // Only emit unauthenticated if we're not already in that state and not in error state
           if (state is! AuthUnauthenticated && state is! AuthError) {
             print('AuthBloc: Emitting AuthUnauthenticated');
-            emit(AuthUnauthenticated());
+            // Check if this was a sign out operation
+            if (state is AuthLoading) {
+              if (_currentOperation == 'signout') {
+                emit(AuthSuccess('Signed out successfully!'));
+              } else {
+                emit(AuthUnauthenticated());
+              }
+              _currentOperation = null; // Reset operation flag
+            } else {
+              emit(AuthUnauthenticated());
+            }
           }
         }
       },
@@ -71,6 +94,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onSignUp(SignUpEvent event, Emitter<AuthState> emit) async {
     print('AuthBloc: Processing SignUpEvent for email: ${event.email}');
+    _currentOperation = 'signup';
     emit(AuthLoading());
     _startTimeoutTimer();
     
@@ -81,6 +105,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // This prevents race conditions
     } catch (e) {
       _timeoutTimer?.cancel();
+      _currentOperation = null; // Reset operation flag on error
       print('AuthBloc: SignUp error: $e');
       // Always emit error state when an error occurs during sign-up
       // This ensures we transition out of loading state
@@ -90,6 +115,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onSignIn(SignInEvent event, Emitter<AuthState> emit) async {
     print('AuthBloc: Processing SignInEvent for email: ${event.email}');
+    _currentOperation = 'signin';
     emit(AuthLoading());
     _startTimeoutTimer();
     
@@ -100,6 +126,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // This prevents race conditions
     } catch (e) {
       _timeoutTimer?.cancel();
+      _currentOperation = null; // Reset operation flag on error
       print('AuthBloc: SignIn error: $e');
       // Always emit error state when an error occurs during sign-in
       // This ensures we transition out of loading state
@@ -108,6 +135,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onSignOut(SignOutEvent event, Emitter<AuthState> emit) async {
+    _currentOperation = 'signout';
     emit(AuthLoading());
     _startTimeoutTimer();
     
@@ -117,10 +145,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // This prevents race conditions
     } catch (e) {
       _timeoutTimer?.cancel();
-      // Only emit error if we're still in loading state
-      if (state is AuthLoading) {
-        emit(AuthError(e.toString()));
-      }
+      _currentOperation = null; // Reset operation flag on error
+      // Always emit error state when an error occurs during sign-out
+      // This ensures we transition out of loading state
+      emit(AuthError(e.toString()));
     }
   }
 
