@@ -10,7 +10,6 @@ import '../constants/colors.dart';
 import '../models/note.dart';
 import '../widgets/note_card.dart';
 import '../widgets/add_note_dialog.dart';
-import '../main.dart' show firebaseInitialized;
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});
@@ -93,25 +92,12 @@ class _NotesScreenState extends State<NotesScreen> {
         backgroundColor: AppColors.purple,
         foregroundColor: AppColors.white,
         elevation: 0,
-        title: Column(
-          children: [
-            Text(
-              'My Notes',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                fontSize: 20,
-              ),
-            ),
-            if (!firebaseInitialized)
-              Text(
-                'Demo Mode',
-                style: GoogleFonts.poppins(
-                  fontSize: 10,
-                  color: AppColors.orange,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-          ],
+        title: Text(
+          'My Notes',
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+          ),
         ),
         actions: [
           IconButton(

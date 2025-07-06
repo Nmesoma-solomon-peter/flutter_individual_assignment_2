@@ -30,14 +30,14 @@ bool firebaseInitialized = false;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Try to initialize Firebase
+  // Initialize Firebase
   try {
     await Firebase.initializeApp();
     firebaseInitialized = true;
     print('Firebase initialized successfully');
   } catch (e) {
     print('Firebase initialization error: $e');
-    print('Running in mock mode - Firebase features will be simulated');
+    print('Please check your Firebase configuration');
     firebaseInitialized = false;
   }
   
@@ -52,32 +52,10 @@ class MyApp extends StatelessWidget {
     return MultiRepositoryProvider(
       providers: [
         RepositoryProvider<AuthRepository>(
-          create: (context) {
-            if (firebaseInitialized) {
-              try {
-                return AuthRepository();
-              } catch (e) {
-                print('Failed to create AuthRepository: $e');
-                return MockAuthRepository();
-              }
-            } else {
-              return MockAuthRepository();
-            }
-          },
+          create: (context) => AuthRepository(),
         ),
         RepositoryProvider<NoteRepository>(
-          create: (context) {
-            if (firebaseInitialized) {
-              try {
-                return NoteRepository();
-              } catch (e) {
-                print('Failed to create NoteRepository: $e');
-                return MockNoteRepository();
-              }
-            } else {
-              return MockNoteRepository();
-            }
-          },
+          create: (context) => NoteRepository(),
         ),
       ],
       child: MultiBlocProvider(
@@ -143,9 +121,43 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // In demo mode, show notes screen directly
     if (!firebaseInitialized) {
-      return const NotesScreen();
+      return Scaffold(
+        backgroundColor: AppColors.primaryBackground,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 80,
+                color: AppColors.error,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Firebase Configuration Error',
+                style: GoogleFonts.poppins(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.error,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  'Please check your Firebase configuration:\n\n1. Create a Firebase project\n2. Add your Android app\n3. Download google-services.json\n4. Enable Authentication and Firestore',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: AppColors.secondaryText,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     return BlocBuilder<AuthBloc, AuthState>(
@@ -187,99 +199,5 @@ class AuthWrapper extends StatelessWidget {
         }
       },
     );
-  }
-}
-
-// Mock repositories for testing without Firebase
-class MockAuthRepository extends AuthRepository {
-  bool _isAuthenticated = false;
-  final StreamController<User?> _authStateController = StreamController<User?>.broadcast();
-
-  @override
-  User? get currentUser => _isAuthenticated ? null : null; // Return null in demo mode
-
-  @override
-  Stream<User?> get authStateChanges => _authStateController.stream;
-
-  @override
-  Future<UserCredential> signUp(String email, String password) async {
-    await Future.delayed(const Duration(seconds: 1));
-    _isAuthenticated = true;
-    _authStateController.add(null); // In demo mode, we don't have a real user
-    throw UnimplementedError('Firebase not configured - this is demo mode. Please set up Firebase to use authentication features.');
-  }
-
-  @override
-  Future<UserCredential> signIn(String email, String password) async {
-    await Future.delayed(const Duration(seconds: 1));
-    _isAuthenticated = true;
-    _authStateController.add(null); // In demo mode, we don't have a real user
-    throw UnimplementedError('Firebase not configured - this is demo mode. Please set up Firebase to use authentication features.');
-  }
-
-  @override
-  Future<void> signOut() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    _isAuthenticated = false;
-    _authStateController.add(null);
-  }
-}
-
-class MockNoteRepository extends NoteRepository {
-  final List<Note> _mockNotes = [
-    Note(
-      id: '1',
-      text: 'Welcome to Notes App! This is a demo note.',
-      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      updatedAt: DateTime.now().subtract(const Duration(hours: 2)),
-      userId: 'demo-user-id',
-    ),
-    Note(
-      id: '2',
-      text: 'You can add, edit, and delete notes. This is demo mode - Firebase is not configured.',
-      createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-      updatedAt: DateTime.now().subtract(const Duration(hours: 1)),
-      userId: 'demo-user-id',
-    ),
-  ];
-
-  @override
-  String? get currentUserId => 'demo-user-id';
-
-  @override
-  Future<List<Note>> fetchNotes() async {
-    await Future.delayed(const Duration(milliseconds: 800));
-    return List.from(_mockNotes);
-  }
-
-  @override
-  Future<void> addNote(String text) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    final newNote = Note(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      text: text,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      userId: 'demo-user-id',
-    );
-    _mockNotes.insert(0, newNote);
-  }
-
-  @override
-  Future<void> updateNote(String id, String text) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    final index = _mockNotes.indexWhere((note) => note.id == id);
-    if (index != -1) {
-      _mockNotes[index] = _mockNotes[index].copyWith(
-        text: text,
-        updatedAt: DateTime.now(),
-      );
-    }
-  }
-
-  @override
-  Future<void> deleteNote(String id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    _mockNotes.removeWhere((note) => note.id == id);
   }
 }

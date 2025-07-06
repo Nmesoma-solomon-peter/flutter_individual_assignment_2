@@ -1,62 +1,91 @@
-# Notes App - Individual Assignment 2
+# Notes App with Firebase
 
-A Flutter notes application with Firebase authentication and CRUD operations for managing personal notes.
+A Flutter notes application with Firebase Authentication and Firestore database, built using BLoC pattern for state management.
 
 ## Features
 
-- 🔐 **Firebase Authentication**: Email and password sign-up/login
-- 📝 **CRUD Operations**: Create, Read, Update, and Delete notes
-- 🎨 **Modern UI**: Beautiful interface with custom color scheme
-- 📱 **Responsive Design**: Works on both mobile and tablet
-- 🔄 **Real-time Sync**: Notes sync with Firestore database
-- 🎯 **Clean Architecture**: BLoC pattern for state management
+- 🔐 **Firebase Authentication** - Email/password sign up and sign in
+- 📝 **CRUD Operations** - Create, read, update, and delete notes
+- 🎨 **Modern UI** - Beautiful Material Design 3 interface
+- 📱 **Responsive Design** - Works on all screen sizes
+- 🔄 **Real-time Updates** - Notes sync across devices
+- 🎯 **Clean Architecture** - BLoC pattern for state management
 
-## Architecture
+## Firebase Setup Instructions
 
-The app follows clean architecture principles with clear separation of concerns:
+### 1. Create Firebase Project
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Click "Create a project" or "Add project"
+3. Enter a project name (e.g., "notes-app")
+4. Choose whether to enable Google Analytics (optional)
+5. Click "Create project"
+
+### 2. Add Android App
+
+1. In your Firebase project, click the Android icon (🤖)
+2. Enter your Android package name: `com.example.individual_assignment_two`
+3. Enter app nickname: "Notes App"
+4. Click "Register app"
+
+### 3. Download Configuration File
+
+1. Download the `google-services.json` file
+2. Replace the existing file in `android/app/google-services.json`
+3. **Important**: Never commit the real `google-services.json` to version control
+
+### 4. Enable Authentication
+
+1. In Firebase Console, go to "Authentication" → "Sign-in method"
+2. Enable "Email/Password" provider
+3. Click "Save"
+
+### 5. Enable Firestore Database
+
+1. In Firebase Console, go to "Firestore Database"
+2. Click "Create database"
+3. Choose "Start in test mode" (for development)
+4. Select a location close to your users
+5. Click "Done"
+
+### 6. Set Firestore Security Rules
+
+In Firestore Database → Rules, replace with:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /notes/{noteId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+  }
+}
+```
+
+### 7. Install Android NDK
+
+1. Open Android Studio
+2. Go to Tools → SDK Manager → SDK Tools
+3. Check "NDK (Side by side)" and install version `27.0.12077973`
+4. Or run: `sdkmanager --install "ndk;27.0.12077973"`
+
+## Project Structure
 
 ```
 lib/
-├── blocs/           # Business Logic Components (BLoC)
-│   ├── auth/       # Authentication state management
-│   └── notes/      # Notes CRUD state management
+├── blocs/           # BLoC state management
+│   ├── auth/        # Authentication BLoC
+│   └── notes/       # Notes BLoC
 ├── constants/       # App constants (colors, etc.)
-├── models/         # Data models
-├── repositories/   # Data layer (Firebase operations)
-├── screens/        # UI screens
-└── widgets/        # Reusable UI components
+├── models/          # Data models
+├── repositories/    # Data layer (Firebase)
+├── screens/         # UI screens
+└── widgets/         # Reusable widgets
 ```
 
-### State Management
-
-The app uses **BLoC (Business Logic Component)** pattern for state management:
-
-- **AuthBloc**: Handles authentication state (login, signup, logout)
-- **NotesBloc**: Manages notes CRUD operations and state
-
-### Data Flow
-
-1. **UI** → **BLoC** → **Repository** → **Firebase**
-2. **Firebase** → **Repository** → **BLoC** → **UI**
-
-## Color Scheme
-
-The app uses a custom color palette:
-- **Light Green**: `#90EE90` - Success states and accents
-- **Purple**: `#9370DB` - Primary brand color
-- **White**: `#FFFFFF` - Background and text
-- **Orange**: `#FFA500` - Call-to-action buttons
-
-## Setup Instructions
-
-### Prerequisites
-
-- Flutter SDK (3.7.2 or higher)
-- Dart SDK
-- Android Studio / VS Code
-- Firebase project
-
-### Installation
+## Getting Started
 
 1. **Clone the repository**
    ```bash
@@ -69,102 +98,63 @@ The app uses a custom color palette:
    flutter pub get
    ```
 
-3. **Firebase Setup**
-   - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
-   - Enable Authentication with Email/Password
-   - Create a Firestore database
-   - Download configuration files:
-     - Android: `google-services.json` → `android/app/`
-     - iOS: `GoogleService-Info.plist` → `ios/Runner/`
+3. **Set up Firebase** (follow instructions above)
 
 4. **Run the app**
    ```bash
    flutter run
    ```
 
-## Firebase Configuration
-
-### Authentication
-- Enable Email/Password authentication in Firebase Console
-- Users can sign up with email and password
-- Password validation (minimum 6 characters)
-
-### Firestore Database
-- Collection: `notes`
-- Document structure:
-  ```json
-  {
-    "text": "Note content",
-    "createdAt": "timestamp",
-    "updatedAt": "timestamp", 
-    "userId": "user_uid"
-  }
-  ```
-
-## CRUD Operations
-
-### Create
-- Tap the ➕ floating action button
-- Enter note text (minimum 3 characters)
-- Tap "Add" to save
-
-### Read
-- Notes are automatically fetched and displayed
-- Empty state shows: "Nothing here yet—tap ➕ to add a note."
-
-### Update
-- Tap the edit icon on any note
-- Modify the text
-- Tap "Update" to save changes
-
-### Delete
-- Tap the delete icon on any note
-- Confirm deletion in the dialog
-- Note is permanently removed
-
-## Error Handling
-
-- **Input Validation**: Email format, password length, note content
-- **Network Errors**: Retry functionality for failed operations
-- **User Feedback**: SnackBar notifications for success/error states
-
-## Testing
-
-### Manual Testing Checklist
-- [ ] User registration with valid email/password
-- [ ] User login with existing credentials
-- [ ] Add new notes
-- [ ] Edit existing notes
-- [ ] Delete notes with confirmation
-- [ ] Empty state display
-- [ ] Error handling for invalid inputs
-- [ ] Sign out functionality
-
 ## Dependencies
 
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-  firebase_core: ^3.6.0
-  firebase_auth: ^5.3.3
-  cloud_firestore: ^5.5.0
-  flutter_bloc: ^9.1.1
-  google_fonts: ^6.2.1
-```
+- `flutter_bloc` - State management
+- `firebase_core` - Firebase initialization
+- `firebase_auth` - Authentication
+- `cloud_firestore` - Database
+- `google_fonts` - Typography
+- `provider` - Dependency injection
+
+## Usage
+
+1. **Sign Up**: Create a new account with email and password
+2. **Sign In**: Use your credentials to access the app
+3. **Add Notes**: Tap the + button to create new notes
+4. **Edit Notes**: Tap on a note to edit its content
+5. **Delete Notes**: Long press a note and select delete
+6. **Sign Out**: Use the logout button in the app bar
+
+## Security
+
+- All notes are tied to the authenticated user
+- Users can only access their own notes
+- Firestore security rules prevent unauthorized access
+- Authentication is handled securely by Firebase
+
+## Troubleshooting
+
+### Firebase Initialization Error
+- Ensure `google-services.json` is in `android/app/`
+- Check that package name matches Firebase project
+- Verify Firebase project is properly configured
+
+### Build Errors
+- Run `flutter clean` and `flutter pub get`
+- Ensure Android NDK version 27.0.12077973 is installed
+- Check that minSdkVersion is 23 or higher
+
+### Authentication Issues
+- Verify Email/Password provider is enabled in Firebase
+- Check Firestore security rules
+- Ensure user is properly authenticated
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test thoroughly
+4. Add tests if applicable
 5. Submit a pull request
 
 ## License
 
-This project is created for educational purposes as part of Individual Assignment 2.
-
-## Support
-
-For issues or questions, please refer to the assignment requirements or contact your instructor.
+This project is licensed under the MIT License.
