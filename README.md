@@ -157,4 +157,4 @@ lib/
 
 ## License
 
-This project is licensed under the MIT License.
+This is an ALU project it has no license Nmesoma peter.
