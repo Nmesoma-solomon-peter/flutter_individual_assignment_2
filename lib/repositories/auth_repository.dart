@@ -1,18 +1,23 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthRepository {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseAuth? _auth;
+
+  FirebaseAuth get _firebaseAuth {
+    _auth ??= FirebaseAuth.instance;
+    return _auth!;
+  }
 
   // Get current user
-  User? get currentUser => _auth.currentUser;
+  User? get currentUser => _firebaseAuth.currentUser;
 
   // Stream of auth state changes
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
+  Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
 
   // Sign up with email and password
   Future<UserCredential> signUp(String email, String password) async {
     try {
-      return await _auth.createUserWithEmailAndPassword(
+      return await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -38,7 +43,7 @@ class AuthRepository {
   // Sign in with email and password
   Future<UserCredential> signIn(String email, String password) async {
     try {
-      return await _auth.signInWithEmailAndPassword(
+      return await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -67,7 +72,7 @@ class AuthRepository {
   // Sign out
   Future<void> signOut() async {
     try {
-      await _auth.signOut();
+      await _firebaseAuth.signOut();
     } catch (e) {
       throw Exception('Failed to sign out: $e');
     }

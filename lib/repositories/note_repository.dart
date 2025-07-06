@@ -3,11 +3,21 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/note.dart';
 
 class NoteRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseFirestore? _firestore;
+  FirebaseAuth? _auth;
+
+  FirebaseFirestore get _firebaseFirestore {
+    _firestore ??= FirebaseFirestore.instance;
+    return _firestore!;
+  }
+
+  FirebaseAuth get _firebaseAuth {
+    _auth ??= FirebaseAuth.instance;
+    return _auth!;
+  }
 
   // Get current user ID
-  String? get currentUserId => _auth.currentUser?.uid;
+  String? get currentUserId => _firebaseAuth.currentUser?.uid;
 
   // Fetch all notes for the current user
   Future<List<Note>> fetchNotes() async {
@@ -15,7 +25,7 @@ class NoteRepository {
       final userId = currentUserId;
       if (userId == null) throw Exception('User not authenticated');
 
-      final querySnapshot = await _firestore
+      final querySnapshot = await _firebaseFirestore
           .collection('notes')
           .where('userId', isEqualTo: userId)
           .orderBy('updatedAt', descending: true)
@@ -44,7 +54,7 @@ class NoteRepository {
         userId: userId,
       );
 
-      await _firestore.collection('notes').add(note.toMap());
+      await _firebaseFirestore.collection('notes').add(note.toMap());
     } catch (e) {
       throw Exception('Failed to add note: $e');
     }
@@ -56,7 +66,7 @@ class NoteRepository {
       final userId = currentUserId;
       if (userId == null) throw Exception('User not authenticated');
 
-      await _firestore.collection('notes').doc(id).update({
+      await _firebaseFirestore.collection('notes').doc(id).update({
         'text': text,
         'updatedAt': DateTime.now(),
       });
@@ -71,7 +81,7 @@ class NoteRepository {
       final userId = currentUserId;
       if (userId == null) throw Exception('User not authenticated');
 
-      await _firestore.collection('notes').doc(id).delete();
+      await _firebaseFirestore.collection('notes').doc(id).delete();
     } catch (e) {
       throw Exception('Failed to delete note: $e');
     }

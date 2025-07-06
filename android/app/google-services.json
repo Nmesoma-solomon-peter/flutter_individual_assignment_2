@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "723420316493",
-    "project_id": "individual-assignment2-b939e",
-    "storage_bucket": "individual-assignment2-b939e.firebasestorage.app"
+    "project_number": "123456789000",
+    "project_id": "notes-app-placeholder",
+    "storage_bucket": "notes-app-placeholder.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:723420316493:android:a94dbaf47536df6228ed04",
+        "mobilesdk_app_id": "1:123456789000:android:abcdef1234567890",
         "android_client_info": {
           "package_name": "com.example.individual_assignment_two"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyC00MQUUcuMb8e88x5la8ppMDLT-Pg-Quw"
+          "current_key": "AIzaSyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
         }
       ],
       "services": {
