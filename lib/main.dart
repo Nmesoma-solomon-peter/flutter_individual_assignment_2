@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:async';
+import 'utils/logger.dart';
 
 // Import BLoCs
 import 'blocs/auth/auth_bloc.dart';
@@ -14,9 +13,6 @@ import 'blocs/notes/notes_bloc.dart';
 // Import repositories
 import 'repositories/auth_repository.dart';
 import 'repositories/note_repository.dart';
-
-// Import models
-import 'models/note.dart';
 
 // Import screens
 import 'screens/auth_screen.dart';
@@ -34,10 +30,10 @@ void main() async {
   try {
     await Firebase.initializeApp();
     firebaseInitialized = true;
-    print('Firebase initialized successfully');
+    Logger.log('Firebase initialized successfully', tag: 'Main');
   } catch (e) {
-    print('Firebase initialization error: $e');
-    print('Please check your Firebase configuration');
+    Logger.error('Firebase initialization error: $e', tag: 'Main');
+    Logger.log('Please check your Firebase configuration', tag: 'Main');
     firebaseInitialized = false;
   }
   
@@ -162,11 +158,15 @@ class AuthWrapper extends StatelessWidget {
 
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        print('AuthWrapper: Current state is ${state.runtimeType}');
+        Logger.log('AuthWrapper: Current state is ${state.runtimeType}', tag: 'Main');
         
         if (state is AuthAuthenticated) {
           return const NotesScreen();
         } else if (state is AuthUnauthenticated || state is AuthInitial) {
+          return const AuthScreen();
+        } else if (state is AuthSuccess) {
+          // For AuthSuccess, show the auth screen (success message will be shown via snackbar)
+          // The auto-transition will handle navigation to the correct screen
           return const AuthScreen();
         } else if (state is AuthError) {
           // Show auth screen even when there's an error, so user can retry

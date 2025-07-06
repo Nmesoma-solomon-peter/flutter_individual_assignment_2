@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../repositories/auth_repository.dart';
+import '../../utils/logger.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 import 'dart:async';
@@ -27,39 +28,75 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         // Cancel timeout timer when auth state changes
         _timeoutTimer?.cancel();
         
-        print('AuthBloc: Auth state changed - User: ${user?.email ?? 'null'}');
+        Logger.log('AuthBloc: Auth state changed - User: ${user?.email ?? 'null'}', tag: 'AuthBloc');
         
         if (user != null) {
           // Only emit authenticated if we're not already in that state
           if (state is! AuthAuthenticated || (state as AuthAuthenticated).user.uid != user.uid) {
-            print('AuthBloc: Emitting AuthAuthenticated for user: ${user.email}');
-            // Check if this was a sign up operation
+            Logger.log('AuthBloc: Emitting AuthAuthenticated for user: ${user.email}', tag: 'AuthBloc');
+            // Check if this was a sign up or sign in operation
             if (state is AuthLoading) {
               if (_currentOperation == 'signup') {
+                // ignore: invalid_use_of_visible_for_testing_member
                 emit(AuthSuccess('Account created successfully! Welcome, ${user.email}!'));
+                // Auto-transition to authenticated after 2 seconds
+                Timer(const Duration(seconds: 2), () {
+                  if (state is AuthSuccess) {
+                    // ignore: invalid_use_of_visible_for_testing_member
+                    emit(AuthAuthenticated(user));
+                  }
+                });
               } else if (_currentOperation == 'signin') {
+                // ignore: invalid_use_of_visible_for_testing_member
                 emit(AuthSuccess('Welcome back, ${user.email}!'));
+                // Auto-transition to authenticated after 2 seconds
+                Timer(const Duration(seconds: 2), () {
+                  if (state is AuthSuccess) {
+                    // ignore: invalid_use_of_visible_for_testing_member
+                    emit(AuthAuthenticated(user));
+                  }
+                });
               } else {
+                // ignore: invalid_use_of_visible_for_testing_member
                 emit(AuthAuthenticated(user));
               }
               _currentOperation = null; // Reset operation flag
+            } else if (state is AuthSuccess) {
+              // If we're already in success state, transition to authenticated
+              // ignore: invalid_use_of_visible_for_testing_member
+              emit(AuthAuthenticated(user));
             } else {
+              // ignore: invalid_use_of_visible_for_testing_member
               emit(AuthAuthenticated(user));
             }
           }
         } else {
           // Only emit unauthenticated if we're not already in that state and not in error state
           if (state is! AuthUnauthenticated && state is! AuthError) {
-            print('AuthBloc: Emitting AuthUnauthenticated');
+            Logger.log('AuthBloc: Emitting AuthUnauthenticated', tag: 'AuthBloc');
             // Check if this was a sign out operation
             if (state is AuthLoading) {
               if (_currentOperation == 'signout') {
+                // ignore: invalid_use_of_visible_for_testing_member
                 emit(AuthSuccess('Signed out successfully!'));
+                // Auto-transition to unauthenticated after 2 seconds
+                Timer(const Duration(seconds: 2), () {
+                  if (state is AuthSuccess) {
+                    // ignore: invalid_use_of_visible_for_testing_member
+                    emit(AuthUnauthenticated());
+                  }
+                });
               } else {
+                // ignore: invalid_use_of_visible_for_testing_member
                 emit(AuthUnauthenticated());
               }
               _currentOperation = null; // Reset operation flag
+            } else if (state is AuthSuccess) {
+              // If we're already in success state, transition to unauthenticated
+              // ignore: invalid_use_of_visible_for_testing_member
+              emit(AuthUnauthenticated());
             } else {
+              // ignore: invalid_use_of_visible_for_testing_member
               emit(AuthUnauthenticated());
             }
           }
@@ -68,8 +105,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       onError: (error) {
         // Handle auth state listener errors
         _timeoutTimer?.cancel();
-        print('AuthBloc: Auth state listener error: $error');
+        Logger.error('AuthBloc: Auth state listener error: $error', tag: 'AuthBloc');
         if (state is AuthLoading) {
+          // ignore: invalid_use_of_visible_for_testing_member
           emit(AuthError('Authentication failed: ${error.toString()}'));
         }
       },
@@ -87,26 +125,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     _timeoutTimer?.cancel();
     _timeoutTimer = Timer(_timeout, () {
       if (state is AuthLoading) {
+        // ignore: invalid_use_of_visible_for_testing_member
         emit(AuthError('Authentication timed out. Please check your internet connection and try again.'));
       }
     });
   }
 
   Future<void> _onSignUp(SignUpEvent event, Emitter<AuthState> emit) async {
-    print('AuthBloc: Processing SignUpEvent for email: ${event.email}');
+    Logger.log('AuthBloc: Processing SignUpEvent for email: ${event.email}', tag: 'AuthBloc');
     _currentOperation = 'signup';
     emit(AuthLoading());
     _startTimeoutTimer();
     
     try {
       await _authRepository.signUp(event.email, event.password);
-      print('AuthBloc: SignUp completed successfully');
+      Logger.log('AuthBloc: SignUp completed successfully', tag: 'AuthBloc');
       // Don't emit success here - let the auth state listener handle it
       // This prevents race conditions
     } catch (e) {
       _timeoutTimer?.cancel();
       _currentOperation = null; // Reset operation flag on error
-      print('AuthBloc: SignUp error: $e');
+      Logger.error('AuthBloc: SignUp error: $e', tag: 'AuthBloc');
       // Always emit error state when an error occurs during sign-up
       // This ensures we transition out of loading state
       emit(AuthError(e.toString()));
@@ -114,20 +153,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onSignIn(SignInEvent event, Emitter<AuthState> emit) async {
-    print('AuthBloc: Processing SignInEvent for email: ${event.email}');
+    Logger.log('AuthBloc: Processing SignInEvent for email: ${event.email}', tag: 'AuthBloc');
     _currentOperation = 'signin';
     emit(AuthLoading());
     _startTimeoutTimer();
     
     try {
       await _authRepository.signIn(event.email, event.password);
-      print('AuthBloc: SignIn completed successfully');
+      Logger.log('AuthBloc: SignIn completed successfully', tag: 'AuthBloc');
       // Don't emit success here - let the auth state listener handle it
       // This prevents race conditions
     } catch (e) {
       _timeoutTimer?.cancel();
       _currentOperation = null; // Reset operation flag on error
-      print('AuthBloc: SignIn error: $e');
+      Logger.error('AuthBloc: SignIn error: $e', tag: 'AuthBloc');
       // Always emit error state when an error occurs during sign-in
       // This ensures we transition out of loading state
       emit(AuthError(e.toString()));

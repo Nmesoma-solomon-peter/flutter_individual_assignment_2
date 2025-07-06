@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import '../utils/logger.dart';
 
 class AuthRepository {
   FirebaseAuth? _auth;
@@ -17,17 +18,17 @@ class AuthRepository {
 
   // Sign up with email and password
   Future<UserCredential> signUp(String email, String password) async {
-    print('AuthRepository: Attempting sign up for email: $email');
+    Logger.log('AuthRepository: Attempting sign up for email: $email', tag: 'AuthRepository');
     try {
       final result = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       ).timeout(_timeout);
       
-      print('AuthRepository: Sign up successful for user: ${result.user?.email}');
+      Logger.log('AuthRepository: Sign up successful for user: ${result.user?.email}', tag: 'AuthRepository');
       return result;
     } on FirebaseAuthException catch (e) {
-      print('AuthRepository: Firebase auth exception during sign up: ${e.code} - ${e.message}');
+      Logger.error('AuthRepository: Firebase auth exception during sign up: ${e.code} - ${e.message}', tag: 'AuthRepository');
       String message;
       switch (e.code) {
         case 'weak-password':
@@ -50,7 +51,7 @@ class AuthRepository {
       }
       throw Exception(message);
     } catch (e) {
-      print('AuthRepository: Unexpected error during sign up: $e');
+      Logger.error('AuthRepository: Unexpected error during sign up: $e', tag: 'AuthRepository');
       if (e.toString().contains('timeout')) {
         throw Exception('Sign up timed out. Please check your internet connection and try again.');
       }
@@ -60,17 +61,17 @@ class AuthRepository {
 
   // Sign in with email and password
   Future<UserCredential> signIn(String email, String password) async {
-    print('AuthRepository: Attempting sign in for email: $email');
+    Logger.log('AuthRepository: Attempting sign in for email: $email', tag: 'AuthRepository');
     try {
       final result = await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       ).timeout(_timeout);
       
-      print('AuthRepository: Sign in successful for user: ${result.user?.email}');
+      Logger.log('AuthRepository: Sign in successful for user: ${result.user?.email}', tag: 'AuthRepository');
       return result;
     } on FirebaseAuthException catch (e) {
-      print('AuthRepository: Firebase auth exception during sign in: ${e.code} - ${e.message}');
+      Logger.error('AuthRepository: Firebase auth exception during sign in: ${e.code} - ${e.message}', tag: 'AuthRepository');
       String message;
       switch (e.code) {
         case 'user-not-found':
@@ -96,7 +97,7 @@ class AuthRepository {
       }
       throw Exception(message);
     } catch (e) {
-      print('AuthRepository: Unexpected error during sign in: $e');
+      Logger.error('AuthRepository: Unexpected error during sign in: $e', tag: 'AuthRepository');
       if (e.toString().contains('timeout')) {
         throw Exception('Sign in timed out. Please check your internet connection and try again.');
       }

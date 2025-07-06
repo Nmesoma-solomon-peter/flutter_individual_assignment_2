@@ -1,5 +1,3 @@
-import '../../models/note.dart';
-
 abstract class NotesEvent {}
 
 class FetchNotesEvent extends NotesEvent {}

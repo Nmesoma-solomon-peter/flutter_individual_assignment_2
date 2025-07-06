@@ -28,7 +28,7 @@ class NoteCard extends StatelessWidget {
             end: Alignment.bottomRight,
             colors: [
               AppColors.white,
-              AppColors.lightPurple.withOpacity(0.3),
+              AppColors.lightPurple.withValues(alpha: 0.3),
             ],
           ),
         ),
@@ -91,7 +91,7 @@ class NoteCard extends StatelessWidget {
                   // Delete button
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.error.withOpacity(0.1),
+                      color: AppColors.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: IconButton(

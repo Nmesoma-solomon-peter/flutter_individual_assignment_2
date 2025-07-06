@@ -148,7 +148,7 @@ class _NotesScreenState extends State<NotesScreen> {
                       Icon(
                         Icons.note_add,
                         size: 80,
-                        color: AppColors.purple.withOpacity(0.5),
+                        color: AppColors.purple.withValues(alpha: 0.5),
                       ),
                       const SizedBox(height: 16),
                       Text(
